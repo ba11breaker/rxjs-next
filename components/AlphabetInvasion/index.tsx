@@ -30,7 +30,7 @@ const Component = ({
             }), ...letters.ltrs]
           }), { ltrs: [], intrvl: 0 })
         )))
-  , [intervalSubject]);
+  , [intervalSubject, gameWidth]);
 
   React.useEffect(() => {
     setKeys$(
@@ -62,7 +62,7 @@ const Component = ({
         { score: 0, letters: [], level: 1 }),
       takeWhile(state => state.letters.length < endThreshold),
     )
-  , [letters$, keys$]);
+  , [letters$, keys$, endThreshold, speedAdjust, levelChangeThreshold]);
 
   const [state, setState] = React.useState<State>({ score: 0, letters: [], level: 1 });
 
