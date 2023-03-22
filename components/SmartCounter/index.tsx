@@ -26,7 +26,7 @@ const SmartCounter : React.FC = () => {
   ), [keyUpSubject, inputChange$]);
 
   React.useEffect(() => {
-    const sub = enter$.subscribe(console.log);
+    const sub = enter$.subscribe(([_,number]) => setCurrentNumber(() => Number(number)));
     return () => {
       sub.unsubscribe();
     };
