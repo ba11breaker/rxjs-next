@@ -1,5 +1,5 @@
 import React from "react";
-import { BehaviorSubject, combineLatestAll, filter, map, tap, withLatestFrom } from "rxjs";
+import { BehaviorSubject, filter, map, mapTo, scan, startWith, switchMap, take, takeWhile, tap, timer, withLatestFrom } from "rxjs";
 import "./index.css"
 
 const takeUntilFunc = (endRange: number, currentNumber: number) => {
@@ -14,6 +14,7 @@ const positiveOrNegative = (endRange: number, currentNumber: number) => {
 
 const SmartCounter : React.FC = () => {
   const [currentNumber, setCurrentNumber] =  React.useState<number>(0);
+  const currentNumberRef = React.useRef<number>(currentNumber);
 
   const inputSubject = React.useMemo(() => new BehaviorSubject<string >(''), []);
   const keyUpSubject = React.useMemo(() => new BehaviorSubject<string>(''), []);
@@ -26,16 +27,30 @@ const SmartCounter : React.FC = () => {
   ), [keyUpSubject, inputChange$]);
 
   React.useEffect(() => {
-    const sub = enter$.subscribe(([_,number]) => setCurrentNumber(() => Number(number)));
+    const sub = enter$
+    .pipe(
+      map<[string, string], number>(([_,number]) => Number(number)),
+      switchMap(endRange => {
+        return timer(0, 20)
+          .pipe(
+            map(() => positiveOrNegative(endRange, currentNumberRef.current)),
+            startWith(currentNumberRef.current),
+            scan((acc, curr) => acc + curr),
+            takeWhile(takeUntilFunc(endRange, currentNumberRef.current)),
+            tap(value => currentNumberRef.current = value),
+          )
+      })
+    )
+    .subscribe(value => setCurrentNumber(() => value));
     return () => {
       sub.unsubscribe();
     };
-  }, [enter$]);
+  },[enter$]);
 
   return (
     <div className="container">
       <input id="range" type="number" onChange={evt => inputSubject.next(evt.target.value)} onKeyUp={evt => keyUpSubject.next(evt.key)} />
-      <h1 id="display"></h1>
+      <h1 id="display">{currentNumber}</h1>
     </div>
   )
 };
